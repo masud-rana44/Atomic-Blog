@@ -1,40 +1,75 @@
-import { useState } from "react";
-import { createRandomPost } from "./utils";
-import { PostProvider, usePosts } from "./PostContext";
-import { ThemeProvider, useTheme } from "./ThemeContext";
+import { faker } from "@faker-js/faker";
+import { createContext, useContext, useEffect, useState } from "react";
 import "./styles.css";
 
+function createRandomPost() {
+  return {
+    title: `${faker.hacker.adjective()} ${faker.hacker.noun()}`,
+    body: faker.hacker.phrase(),
+  };
+}
+
+const PostContext = createContext();
+
 function App() {
+  const [posts, setPosts] = useState(
+    Array.from({ length: 30 }, () => createRandomPost())
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isFakeDark, setIsFakeDark] = useState(false);
+
+  const searchedPosts =
+    searchQuery.length > 0
+      ? posts.filter((post) =>
+          `${post.title} ${post.body}`
+            .toLowerCase()
+            .includes(searchQuery.toLocaleLowerCase())
+        )
+      : posts;
+
+  function handleAddPost(post) {
+    setPosts((posts) => [post, ...posts]);
+  }
+
+  function handleClearPosts() {
+    setPosts([]);
+  }
+
+  useEffect(
+    function () {
+      document.documentElement.classList.toggle("fake-dark-mode");
+    },
+    [isFakeDark]
+  );
+
   return (
-    <section>
-      <ThemeProvider>
-        <ThemeButton />
-      </ThemeProvider>
-      <PostProvider>
+    <PostContext.Provider
+      value={{
+        posts: searchedPosts,
+        onClearPosts: handleClearPosts,
+        onAddPost: handleAddPost,
+        searchQuery,
+        setSearchQuery,
+      }}
+    >
+      <section>
+        <button
+          onClick={() => setIsFakeDark((isFakeDark) => !isFakeDark)}
+          className="btn-fake-dark-mode"
+        >
+          {isFakeDark ? "☀️" : "🌙"}
+        </button>
         <Header />
         <Main />
         <Archive />
         <Footer />
-      </PostProvider>
-    </section>
-  );
-}
-
-function ThemeButton() {
-  const { isFakeDark, setIsFakeDark } = useTheme();
-
-  return (
-    <button
-      onClick={() => setIsFakeDark((isFakeDark) => !isFakeDark)}
-      className="btn-fake-dark-mode"
-    >
-      {isFakeDark ? "☀️" : "🌙"}
-    </button>
+      </section>
+    </PostContext.Provider>
   );
 }
 
 function Header() {
-  const { onClearPosts } = usePosts();
+  const { onClearPosts } = useContext(PostContext);
 
   return (
     <header>
@@ -49,13 +84,13 @@ function Header() {
 }
 
 function Results() {
-  const { posts } = usePosts();
+  const { posts } = useContext(PostContext);
 
   return <p>🚀 {posts.length} atomic posts found</p>;
 }
 
 function SearchPosts() {
-  const { searchQuery, setSearchQuery } = usePosts();
+  const { searchQuery, setSearchQuery } = useContext(PostContext);
 
   return (
     <input
@@ -84,7 +119,7 @@ function Posts() {
 }
 
 function List() {
-  const { posts } = usePosts();
+  const { posts } = useContext(PostContext);
 
   return (
     <ul>
@@ -99,7 +134,7 @@ function List() {
 }
 
 function FormAddPost() {
-  const { onAddPost } = usePosts();
+  const { onAddPost } = useContext(PostContext);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -134,7 +169,7 @@ function Footer() {
 }
 
 function Archive() {
-  const { onAddPost } = usePosts();
+  const { onAddPost } = useContext(PostContext);
 
   const [posts] = useState(() =>
     Array.from({ length: 100 }, () => createRandomPost())
