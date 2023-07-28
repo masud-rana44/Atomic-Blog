@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import "./styles.css";
 
 function createRandomPost() {
@@ -8,6 +8,8 @@ function createRandomPost() {
     body: faker.hacker.phrase(),
   };
 }
+
+const PostContext = createContext();
 
 function App() {
   const [posts, setPosts] = useState(
@@ -41,44 +43,55 @@ function App() {
   );
 
   return (
-    <section>
-      <button
-        onClick={() => setIsFakeDark((isFakeDark) => !isFakeDark)}
-        className="btn-fake-dark-mode"
-      >
-        {isFakeDark ? "☀️" : "🌙"}
-      </button>
-      <Header
-        posts={searchedPosts}
-        onClearPosts={handleClearPosts}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
-      <Main posts={searchedPosts} onAddPost={handleAddPost} />
-      <Archive onAddPost={handleAddPost} />
-      <Footer />
-    </section>
+    <PostContext.Provider
+      value={{
+        posts: searchedPosts,
+        onClearPosts: handleClearPosts,
+        onAddPost: handleAddPost,
+        searchQuery,
+        setSearchQuery,
+      }}
+    >
+      <section>
+        <button
+          onClick={() => setIsFakeDark((isFakeDark) => !isFakeDark)}
+          className="btn-fake-dark-mode"
+        >
+          {isFakeDark ? "☀️" : "🌙"}
+        </button>
+        <Header />
+        <Main />
+        <Archive />
+        <Footer />
+      </section>
+    </PostContext.Provider>
   );
 }
 
-function Header({ posts, onClearPosts, searchQuery, setSearchQuery }) {
+function Header() {
+  const { onClearPosts } = useContext(PostContext);
+
   return (
     <header>
       <h1>
         <span>⚛️</span>The Atomic Blog
       </h1>
-      <Results posts={posts} />
-      <SearchPosts searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      <Results />
+      <SearchPosts />
       <button onClick={onClearPosts}>Clear posts</button>
     </header>
   );
 }
 
-function Results({ posts }) {
+function Results() {
+  const { posts } = useContext(PostContext);
+
   return <p>🚀 {posts.length} atomic posts found</p>;
 }
 
-function SearchPosts({ searchQuery, setSearchQuery }) {
+function SearchPosts() {
+  const { searchQuery, setSearchQuery } = useContext(PostContext);
+
   return (
     <input
       value={searchQuery}
@@ -88,24 +101,26 @@ function SearchPosts({ searchQuery, setSearchQuery }) {
   );
 }
 
-function Main({ posts, onAddPost }) {
+function Main() {
   return (
     <main>
-      <FormAddPost onAddPost={onAddPost} />
-      <Posts posts={posts} />
+      <FormAddPost />
+      <Posts />
     </main>
   );
 }
 
-function Posts({ posts }) {
+function Posts() {
   return (
     <section>
-      <List posts={posts} />
+      <List />
     </section>
   );
 }
 
-function List({ posts }) {
+function List() {
+  const { posts } = useContext(PostContext);
+
   return (
     <ul>
       {posts.map((post, i) => (
@@ -118,7 +133,9 @@ function List({ posts }) {
   );
 }
 
-function FormAddPost({ onAddPost }) {
+function FormAddPost() {
+  const { onAddPost } = useContext(PostContext);
+
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
 
@@ -151,7 +168,9 @@ function Footer() {
   return <footer>&copy; by The Atomic Blog ✌️</footer>;
 }
 
-function Archive({ onAddPost }) {
+function Archive() {
+  const { onAddPost } = useContext(PostContext);
+
   const [posts] = useState(() =>
     Array.from({ length: 100 }, () => createRandomPost())
   );
