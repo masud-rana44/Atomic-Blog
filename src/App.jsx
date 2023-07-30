@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createRandomPost } from "./utils";
 import { PostProvider, usePosts } from "./PostContext";
 import { ThemeProvider, useTheme } from "./ThemeContext";
-import "./styles.css";
 
 function App() {
   return (
@@ -87,14 +86,18 @@ function List() {
   const { posts } = usePosts();
 
   return (
-    <ul>
-      {posts.map((post, i) => (
-        <li key={i}>
-          <h3>{post.title}</h3>
-          <p>{post.body}</p>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul>
+        {posts.map((post, i) => (
+          <li key={i}>
+            <h3>{post.title}</h3>
+            <p>{post.body}</p>
+          </li>
+        ))}
+      </ul>
+
+      <Test />
+    </>
   );
 }
 
@@ -165,3 +168,47 @@ function Archive() {
 }
 
 export default App;
+
+// TESTING PURPOSE
+
+function SlowComponent() {
+  // If this is too slow on your maching, reduce the `length`
+  const words = Array.from({ length: 400_00 }, () => "WORD");
+  return (
+    <ul>
+      {words.map((word, i) => (
+        <li key={i}>
+          {i}: {word}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Test() {
+  // return (
+  //   <div>
+  //     <h1>Slow counter?!?</h1>
+  //     <button onClick={() => setCount((c) => c + 1)}>Increase: {count}</button>
+  //     <SlowComponent />
+  //   </div>
+  // );
+
+  return (
+    <Counter>
+      <SlowComponent />
+    </Counter>
+  );
+}
+
+function Counter({ children }) {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <h1>Slow counter?!?</h1>
+      <button onClick={() => setCount((c) => c + 1)}>Increase: {count}</button>
+      {children}
+    </div>
+  );
+}
